@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/wedeploy/gosocketio/ack"
-	"github.com/wedeploy/gosocketio/internal/protocol"
+	"github.com/qengli/gosocketio-client/ack"
+	"github.com/qengli/gosocketio-client/internal/protocol"
 )
 
 // NewNamespace creates a namespace.

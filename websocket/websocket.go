@@ -79,11 +79,10 @@ func (c *Connection) WriteMessage(message string) error {
 		return err
 	}
 
-	if _, err := writer.Write([]byte(message)); err != nil {
-		return err
-	}
+	defer writer.Close()
+	_, err = writer.Write([]byte(message))
+	return err
 
-	return writer.Close()
 }
 
 // Close the connection
@@ -94,6 +93,10 @@ func (c *Connection) Close() {
 // PingParams gets the ping and pong interval and timeout
 func (c *Connection) PingParams() (interval, timeout time.Duration) {
 	return c.transport.PingInterval, c.transport.PingTimeout
+}
+
+func (c *Connection) ReadSendTimeout() (rt, st time.Duration) {
+	return c.transport.ReadTimeout, c.transport.SendTimeout
 }
 
 // Transport for the websocket
@@ -119,7 +122,7 @@ func NewTransport() *Transport {
 		RequestHeader: http.Header{},
 	}
 
-	t.RequestHeader.Add("User-Agent", "socketio client; (+https://github.com/wedeploy/gosocket.io)")
+	t.RequestHeader.Add("User-Agent", "socketio client; (+github.com/qengli/gosocketio-client)")
 
 	return t
 }

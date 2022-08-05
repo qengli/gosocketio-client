@@ -9,7 +9,7 @@ console.log('Listening at http://localhost:3000/')
 
 function handler (req, res) {
   res.writeHead(200)
-  res.end('Testing server for http://github.com/wedeploy/gosocketio example.')
+  res.end('Testing server for https://github.com/qengli/gosocketio-client example.')
 }
 
 let vehicles = ['Falcon', 'airplane', 'balloon', 'drone']

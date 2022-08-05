@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/wedeploy/gosocketio/internal/protocol"
+	"github.com/qengli/gosocketio-client/internal/protocol"
 )
 
 func (h *Handler) getFunctionCallArgs(msg *protocol.Message) (is []interface{}, err error) {

@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/wedeploy/gosocketio"
-	"github.com/wedeploy/gosocketio/websocket"
+	"github.com/qengli/gosocketio-client"
+	"github.com/qengli/gosocketio-client/websocket"
 )
 
 // Route to fly.
