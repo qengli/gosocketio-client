@@ -224,26 +224,16 @@ func (c *Client) ID() string {
 
 // incoming messages loop, puts incoming messages to In channel
 func (c *Client) inLoop() {
-	readTimeout, _ := c.conn.ReadSendTimeout()
-	pingInterval, pingTimeout := c.conn.PingParams()
-	inTimeout := 3*pingInterval + pingTimeout + readTimeout
 	for {
-		tc, cancel := context.WithTimeout(context.Background(), inTimeout)
 		select {
 		case <-c.ctx.Done():
-			cancel()
-			return
-		case <-tc.Done():
-			// too long to recv any msg
-			c.callLoopEvent(defaultNamespace, protocol.OnError, fmt.Errorf("recv timeout, %s", tc.Err().Error()))
-			cancel()
-			c.ctxCancel()
 			return
 		default:
 			// gorilla's websocket (c *Conn) NextReader() is used internally by GetMessage
 			// see notes there about breaking out of the loop on error
+			fmt.Printf("peek msg \n")
 			pkg, err := c.getConn().GetMessage()
-			cancel()
+			fmt.Printf("got msg \n")
 			if err == websocket.ErrUnsupportedBinaryMessage ||
 				err == websocket.ErrBadBuffer ||
 				err == websocket.ErrPacketType {
@@ -256,7 +246,7 @@ func (c *Client) inLoop() {
 				c.ctxCancel()
 				return
 			}
-
+			fmt.Printf("to decode %d \n", len(pkg))
 			msg, err := protocol.Decode(pkg)
 
 			if err != nil {
@@ -269,8 +259,9 @@ func (c *Client) inLoop() {
 				c.ctxCancel()
 				return
 			}
-
+			fmt.Printf("decoded, to handle \n")
 			c.incomingHandler(msg)
+			fmt.Printf("handled \n")
 		}
 	}
 }
@@ -281,28 +272,16 @@ func (c *Client) outLoop() {
 	pingInterval, _ := c.getConn().PingParams()
 	var ticker = time.NewTicker(pingInterval)
 	defer ticker.Stop()
-	_, sendTimeout := c.conn.ReadSendTimeout()
-	pingInterval, pingTimeout := c.conn.PingParams()
-	outTimeout := 3*pingInterval + pingTimeout + sendTimeout
 	for {
-		tc, cancel := context.WithTimeout(context.Background(), outTimeout)
 		select {
 		case <-c.ctx.Done():
-			cancel()
 			return
-		case <-tc.Done():
-			/** too long to write */
-			c.callLoopEvent(defaultNamespace, protocol.OnError, fmt.Errorf("write timeout, %s", tc.Err().Error()))
-			cancel()
-			c.ctxCancel()
 		case mw := <-c.out:
 			writeMsg(mw, c.conn.WriteMessage)
-			cancel()
 		case <-ticker.C:
 			if err := c.conn.WriteMessage(protocol.PingMessage); err != nil {
 				c.callLoopEvent(defaultNamespace, OnError, err)
 			}
-			cancel()
 		}
 	}
 }
@@ -319,6 +298,7 @@ type msgWriter struct {
 }
 
 func (c *Client) writeMessage(msg string) error {
+	fmt.Printf("write msg %d\n", len(msg))
 	mw := &msgWriter{
 		msg: msg,
 	}
@@ -326,6 +306,7 @@ func (c *Client) writeMessage(msg string) error {
 	mw.wg.Add(1)
 	c.out <- mw
 	mw.wg.Wait()
+	fmt.Printf("write msg ok\n")
 	return mw.err
 }
 
@@ -484,7 +465,7 @@ func (c *Client) incomingHandler(msg *protocol.Message) {
 			c.callLoopEvent(defaultNamespace, OnError, err)
 		}
 	case protocol.MessageTypePong:
-		fmt.Printf("recv pong")
+
 	case protocol.MessageTypeError:
 		err := fmt.Errorf("error on method %s on namespace %s", msg.Method, msg.Namespace)
 		c.callLoopEvent(msg.Namespace, protocol.OnError, err)

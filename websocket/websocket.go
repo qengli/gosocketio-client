@@ -45,7 +45,10 @@ type Connection struct {
 
 // GetMessage on connection
 func (c *Connection) GetMessage() (data []byte, err error) {
-	c.socket.SetReadDeadline(time.Now().Add(c.transport.ReadTimeout))
+	err = c.socket.SetReadDeadline(time.Now().Add(c.transport.ReadTimeout))
+	if err != nil {
+		return data, err
+	}
 
 	msgType, reader, err := c.socket.NextReader()
 
@@ -72,7 +75,10 @@ func (c *Connection) GetMessage() (data []byte, err error) {
 
 // WriteMessage to the socket
 func (c *Connection) WriteMessage(message string) error {
-	c.socket.SetWriteDeadline(time.Now().Add(c.transport.SendTimeout))
+	err := c.socket.SetWriteDeadline(time.Now().Add(c.transport.SendTimeout))
+	if err != nil {
+		return err
+	}
 	writer, err := c.socket.NextWriter(ws.TextMessage)
 
 	if err != nil {
