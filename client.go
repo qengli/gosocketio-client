@@ -224,7 +224,9 @@ func (c *Client) ID() string {
 
 // incoming messages loop, puts incoming messages to In channel
 func (c *Client) inLoop() {
+	fmt.Printf("inLoop... \n")
 	for {
+		fmt.Printf("... \n")
 		select {
 		case <-c.ctx.Done():
 			return
@@ -242,24 +244,27 @@ func (c *Client) inLoop() {
 			}
 
 			if err != nil {
+				fmt.Printf("get msg err:%s\n", err.Error())
 				c.callLoopEvent(defaultNamespace, protocol.OnError, err)
 				c.ctxCancel()
 				return
 			}
-			fmt.Printf("to decode %d \n", len(pkg))
+			fmt.Printf("to decode %d\n", len(pkg))
 			msg, err := protocol.Decode(pkg)
-
+			fmt.Printf("msg type %s\n", msg.Type)
 			if err != nil {
+				fmt.Printf("decode error, %s\n", err.Error())
 				c.callLoopEvent(defaultNamespace, protocol.OnError, err)
 				continue
 			}
 
 			if msg.Type == protocol.MessageTypeClose {
+				fmt.Printf("recv close\n")
 				c.callLoopEvent(defaultNamespace, protocol.OnError, fmt.Errorf("recv close"))
 				c.ctxCancel()
 				return
 			}
-			fmt.Printf("decoded, to handle \n")
+			fmt.Printf("decoded, to handle\n")
 			c.incomingHandler(msg)
 			fmt.Printf("handled \n")
 		}
