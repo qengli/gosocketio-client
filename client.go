@@ -32,9 +32,10 @@ const (
 // Connect dials and waits for the "connection" event.
 // It blocks for the timeout duration. If the connection is not established in time,
 // it closes the connection and returns an error.
-func Connect(u url.URL, tr *websocket.Transport) (c *Client, err error) {
+func ConnectSync(u url.URL, tr *websocket.Transport) (c *Client, err error) {
 	c, err = dial(u, tr)
-
+	go c.inLoop()
+	go c.outLoop()
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +105,6 @@ func dial(u url.URL, tr *websocket.Transport) (c *Client, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	go c.inLoop()
-	go c.outLoop()
 
 	return c, nil
 }
@@ -215,6 +213,11 @@ func (c *Client) init() {
 	c.handlers = &handlers{}
 	c.handlers.Reset()
 	c.out = make(chan *msgWriter)
+}
+
+func (c *Client) Run() {
+	go c.inLoop()
+	go c.outLoop()
 }
 
 // ID of current socket connection
