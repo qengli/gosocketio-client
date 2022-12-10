@@ -227,18 +227,18 @@ func (c *Client) ID() string {
 
 // incoming messages loop, puts incoming messages to In channel
 func (c *Client) inLoop() {
-	fmt.Printf("inLoop... \n")
+	// fmt.Printf("inLoop... \n")
 	for {
-		fmt.Printf("... \n")
+		// fmt.Printf("... \n")
 		select {
 		case <-c.ctx.Done():
 			return
 		default:
 			// gorilla's websocket (c *Conn) NextReader() is used internally by GetMessage
 			// see notes there about breaking out of the loop on error
-			fmt.Printf("peek msg \n")
+			// fmt.Printf("peek msg \n")
 			pkg, err := c.getConn().GetMessage()
-			fmt.Printf("got msg \n")
+			// fmt.Printf("got msg \n")
 			if err == websocket.ErrUnsupportedBinaryMessage ||
 				err == websocket.ErrBadBuffer ||
 				err == websocket.ErrPacketType {
@@ -247,29 +247,29 @@ func (c *Client) inLoop() {
 			}
 
 			if err != nil {
-				fmt.Printf("get msg err:%s\n", err.Error())
+				// fmt.Printf("get msg err:%s\n", err.Error())
 				c.callLoopEvent(defaultNamespace, protocol.OnError, err)
 				c.ctxCancel()
 				return
 			}
-			fmt.Printf("to decode %d\n", len(pkg))
+			// fmt.Printf("to decode %d\n", len(pkg))
 			msg, err := protocol.Decode(pkg)
-			fmt.Printf("msg type %s\n", msg.Type)
+			// fmt.Printf("msg type %s\n", msg.Type)
 			if err != nil {
-				fmt.Printf("decode error, %s\n", err.Error())
+				// fmt.Printf("decode error, %s\n", err.Error())
 				c.callLoopEvent(defaultNamespace, protocol.OnError, err)
 				continue
 			}
 
 			if msg.Type == protocol.MessageTypeClose {
-				fmt.Printf("recv close\n")
+				// fmt.Printf("recv close\n")
 				c.callLoopEvent(defaultNamespace, protocol.OnError, fmt.Errorf("recv close"))
 				c.ctxCancel()
 				return
 			}
-			fmt.Printf("decoded, to handle\n")
+			// fmt.Printf("decoded, to handle\n")
 			c.incomingHandler(msg)
-			fmt.Printf("handled \n")
+			// fmt.Printf("handled \n")
 		}
 	}
 }
@@ -306,7 +306,7 @@ type msgWriter struct {
 }
 
 func (c *Client) writeMessage(msg string) error {
-	fmt.Printf("write msg %d\n", len(msg))
+	// fmt.Printf("write msg %d\n", len(msg))
 	mw := &msgWriter{
 		msg: msg,
 	}
@@ -314,7 +314,7 @@ func (c *Client) writeMessage(msg string) error {
 	mw.wg.Add(1)
 	c.out <- mw
 	mw.wg.Wait()
-	fmt.Printf("write msg ok\n")
+	// fmt.Printf("write msg ok\n")
 	return mw.err
 }
 
